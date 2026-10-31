@@ -1,8 +1,8 @@
 /* Turkish. */
 
 /* AppDelegate */
-"Let Tendedero handle your screenshots?" = "Ekran görüntülerini Tendedero yönetsin mi?";
-"Screenshots will hang on the line the instant you take them, without the floating thumbnail, and will not pile up on your Desktop. Drag one to a folder to keep it, or discard it with the cross. You can turn this off from the menu bar, and your settings come back when Tendedero quits." = "Ekran görüntüleri, kayan küçük resim olmadan anında ipin üzerine asılacak ve Masaüstünüzde birikmeyecek. Saklamak için bir klasöre sürükleyin ya da çarpı ile silin. Bunu menü çubuğundan kapatabilirsiniz; Tendedero kapandığında ayarlarınız geri gelir.";
+"Let 晾架 handle your screenshots?" = "Ekran görüntülerini 晾架 yönetsin mi?";
+"Screenshots will hang on the line the instant you take them, without the floating thumbnail, and will not pile up on your Desktop. Drag one to a folder to keep it, or discard it with the cross. You can turn this off from the menu bar, and your settings come back when 晾架 quits." = "Ekran görüntüleri, kayan küçük resim olmadan anında ipin üzerine asılacak ve Masaüstünüzde birikmeyecek. Saklamak için bir klasöre sürükleyin ya da çarpı ile silin. Bunu menü çubuğundan kapatabilirsiniz; 晾架 kapandığında ayarlarınız geri gelir.";
 "Turn on" = "Etkinleştir";
 "Not now" = "Şimdi değil";
 "Hide line" = "İpi gizle";
@@ -14,9 +14,9 @@
 "Sounds" = "Sesler";
 "Open at login" = "Başlangıçta aç";
 "Check for Updates…" = "Güncellemeleri denetle…";
-"Quit Tendedero" = "Tendedero'yu kapat";
+"Quit 晾架" = "晾架'yu kapat";
 "Could not change the login setting" = "Giriş ayarı değiştirilemedi";
-"Move Tendedero to the Applications folder and try again." = "Tendedero'yu Uygulamalar klasörüne taşıyın ve tekrar deneyin.";
+"Move 晾架 to the Applications folder and try again." = "晾架'yu Uygulamalar klasörüne taşıyın ve tekrar deneyin.";
 "Keep on line" = "İpte tut";
 "As many as fit" = "Sığdığı kadar";
 "%d photos" = "%d fotoğraf";
@@ -42,7 +42,7 @@
 "Over full screen apps" = "Tam ekran uygulamaların üzerinde";
 "Hang copied images" = "Kopyalanan görselleri as";
 "Images you copy hang on the line too" = "Kopyaladığınız görseller de ipe asılır";
-"Tendedero, hanging copied images" = "Tendedero, kopyalanan görselleri asıyor";
+"晾架, hanging copied images" = "晾架, kopyalanan görselleri asıyor";
 
 /* GrabArea */
 "Copy" = "Kopyala";

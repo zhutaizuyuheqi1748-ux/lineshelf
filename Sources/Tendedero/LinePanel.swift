@@ -7,6 +7,8 @@ final class LinePanel: NSPanel {
     init(content: NSView) {
         super.init(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel],
                    backing: .buffered, defer: false)
+        title = "晾架"
+        setAccessibilityLabel("晾架文件暂存区")
         isOpaque = false
         backgroundColor = .clear
         hasShadow = false

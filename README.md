@@ -1,177 +1,70 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/hero-dark.png">
-  <img src="docs/images/hero-light.png" alt="Tendedero. Screenshots, hung out to dry. Three screenshots in glass frames hang from a thin line under the macOS menu bar.">
-</picture>
+# LineShelf (晾架)
 
-<h3 align="center"><a href="https://tendedero.app/?lang=en">Try it in your browser at tendedero.app&nbsp;&rsaquo;</a></h3>
+An experimental macOS file shelf based on [Tendedero](https://github.com/alejandrobujan/tendedero), by Alejandro Buján. LineShelf keeps the original screenshot and screen-recording inlets and adds two ways to keep recently received files within reach.
 
-<p align="center">
-  Free and open source. For macOS 14 and later.
-  <br>
-  <a href="../../releases/latest">Download&nbsp;&rsaquo;</a>
-  &nbsp;&nbsp;
-  <a href="#build-from-source">Build from source&nbsp;&rsaquo;</a>
-  <br><br>
-  English&nbsp;·&nbsp;<a href="docs/i18n/README.es.md">Español</a>&nbsp;·&nbsp;<a href="docs/i18n/README.gl.md">Galego</a>&nbsp;·&nbsp;<a href="docs/i18n/README.fr.md">Français</a>&nbsp;·&nbsp;<a href="docs/i18n/README.pt-BR.md">Português (Brasil)</a>&nbsp;·&nbsp;<a href="docs/i18n/README.ja.md">日本語</a>&nbsp;·&nbsp;<a href="docs/i18n/README.ko.md">한국어</a>&nbsp;·&nbsp;<a href="docs/i18n/README.zh-Hans.md">简体中文</a>&nbsp;·&nbsp;<a href="docs/i18n/README.tr.md">Türkçe</a>&nbsp;·&nbsp;<a href="docs/i18n/README.az.md">Azərbaycanca</a>
-</p>
+This is an independent fork, with its own name, icon, bundle identifier and storage folders. It is not an official Tendedero release and is not endorsed by its author. The upstream documentation retained under `docs/` describes the original project.
 
-<p align="center">
-  <a href="https://trendshift.io/repositories/287033?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-287033" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/287033/daily?language=Swift" alt="alejandrobujan%2Ftendedero | Trendshift" width="250" height="55"/></a>
-</p>
+## Two file inlets
 
-<br>
+### Drop files from other applications
 
-## Out of sight. Within reach.
+Drag a local file from another application toward the top of the screen, move into the shelf when it appears, and release. LineShelf keeps a local copy so that a source application's temporary file can disappear without losing the shelf copy.
 
-Every screenshot you take hangs on a line just above your screen.
-Rest the pointer in the menu bar and it glides down. Move away and it's gone.
+Messaging apps such as Telegram or WhatsApp are examples of the intended workflow: keep an attachment on the shelf, then drag it into the next application, without first putting it on the Desktop. Compatibility depends on the source application providing a standard macOS file URL or file promise. These two named applications have not been individually tested; this is not an integration with their accounts, messages or APIs.
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/demo-dark.gif">
-  <img src="docs/images/demo-light.gif" alt="The pointer rests against the top edge, the line slides down with three screenshots swinging gently, a click copies one, and the line tucks away when the pointer leaves.">
-</picture>
+### Find new downloads and AirDrop files quickly
 
-<br>
-<br>
+New files arriving in the top level of the user's Downloads folder appear on the shelf. This includes browser downloads and AirDrop files when they are saved there. Files stay in their original location. The app does not intercept network traffic or implement the AirDrop protocol.
 
-## A gesture for everything.
+The Downloads inlet is on by default in this experimental fork and can be turned off from the menu bar. It ignores files already present when the watcher starts. Existing screenshot, screen-recording and optional clipboard-image inlets remain available.
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/bento-dark.png">
-  <img src="docs/images/bento-light.png" alt="Click to copy. Hold to mark up. Drag to share. Let it go.">
-</picture>
+## Using the shelf
 
-<br>
-<br>
+- Images and MP4/MOV files use previews; other file types show an icon and filename.
+- Click to copy the file, double-click to open it, or long-press an ordinary file for Quick Look.
+- Drag a card into another application or a folder using the original app's file-dragging behavior.
+- For a download, **Take down** only removes its card. **Move to Trash**, or dropping it on the Trash, deletes the original recoverably.
+- For a manually imported copy, the corner cross trashes the shelf copy; the source file remains unchanged.
+- Capacity eviction removes imported copies from the visible shelf without silently deleting them. This fork defaults to 50 cards.
 
-| | |
-|:--|:--|
-| Click | Copy the image. |
-| Press and hold | Open it in Markup. |
-| Double click | Open it in Preview. |
-| Force click | Take a quick look. |
-| Drag into an app | Send a copy. It stays on the line. |
-| Drag into a folder | Keep it there. It leaves the line. |
-| Drag to the Trash, or click the cross | Let it go. |
-| Rest the pointer in the menu bar | Bring the line down on that screen. |
-| Click anything in the menu bar | Put it away. |
-| <kbd>⌃</kbd>&thinsp;<kbd>⌥</kbd>&thinsp;<kbd>T</kbd> | Show or hide the line. Change it under Shortcut in the menu bar. |
+## Build and check
 
-<br>
-
-## Your Desktop. Finally clear.
-
-Hand Tendedero your screenshots<sup>1</sup> and they skip the Desktop
-entirely. No floating thumbnail. No five-second wait. Each capture hangs
-the instant you take it, and only what you drag out is kept.
-
-Screen recordings hang there too, with a play button over them.
-Press and hold one to trim it.
-
-Same shortcuts. Same muscle memory. Just less mess.
-
-<br>
-
-## Copied images too.
-
-Take a screenshot with <kbd>⌃</kbd> held, or copy an image in Preview, and it
-hangs on the line like any other. Turn on Hang copied images in the menu bar
-and the shirt fills in while it is on. Only images: anything copied along
-with text or a file, and anything a password manager marks as private, is
-left alone.
-
-<br>
-
-## Private by design.
-
-No account. No network. No analytics.
-Tendedero runs entirely on your Mac, and your screenshots never leave it.
-
-<br>
-
-## Tech Specs
-
-| | |
-|:--|:--|
-| **Compatibility** | macOS 14 Sonoma or later, on Apple silicon and Intel. Designed for macOS 27. |
-| **Size** | 1.7 MB |
-| **Languages** | English, Spanish, Galician, French, Portuguese (Brazil), Japanese, Korean, Chinese (Simplified), Turkish, Azerbaijani |
-| **Built with** | Swift, AppKit and SwiftUI |
-| **Network access** | None |
-| **Price** | Free |
-| **License** | MIT for the code. The name and icon are not included. |
-
-<br>
-
-## Install
-
-Download the disk image from the [latest release](../../releases/latest),
-open it and drag Tendedero to Applications. Or install it with Homebrew:
+Requires macOS 14 or later and a compatible Swift toolchain. Xcode is optional.
 
 ```sh
-brew install --cask alejandrobujan/tap/tendedero
+git clone --branch feature/file-inlets https://github.com/zhutaizuyuheqi1748-ux/lineshelf.git
+cd lineshelf
+scripts/build-lineshelf.sh
+scripts/test-lineshelf.sh
+open build/晾架.app
 ```
 
-Tendedero is signed with a Developer ID and notarized by Apple, so it opens
-like any other app.
+`build-lineshelf.sh` creates an ad-hoc signed app for the current machine's architecture. The original `build-app.sh` is retained as upstream source history; use the LineShelf script for this modified version. macOS may ask for access to Downloads, Desktop or a selected folder.
 
-<br>
+Do not run both applications' screenshot-handling modes simultaneously: they share macOS screenshot destination settings. Quit one before using the other. This repository publishes source code; it does not contain a notarized release binary.
 
-## Build from source
+## Storage and privacy
 
-```sh
-git clone git@github.com:alejandrobujan/tendedero.git
-cd tendedero
-scripts/build-app.sh
-open build/Tendedero.app
-```
+- Captures: `~/Library/Application Support/LineShelf/Screenshots`
+- Imported file copies: `~/Library/Application Support/LineShelf/DroppedFiles`
+- Downloads: remain in Downloads; watching does not copy or move them.
+- Preferences domain: `local.lineshelf.app`
 
-Requires the Swift toolchain. Xcode is optional. With the Command Line Tools for macOS 27, the script falls back to the macOS 26 SDK they install alongside, because the new SDK needs a SwiftUI macro plugin only Xcode includes. Local builds are signed ad hoc,
-so macOS asks again for access to the Desktop after each rebuild.
+No chat-account access, background chat-history scanning, analytics or network service is added. The published changes contain source code, synthetic test fixtures generated at runtime, and documentation. Personal files, local preferences, logs, recordings, build artifacts and machine-specific home paths are excluded.
 
-<details>
-<summary>Inside the app</summary>
-<br>
+## Current scope and limitations
 
-| File | Role |
-|:--|:--|
-| `AppDelegate.swift` | Menu bar, shortcut, revealing and tucking away the line |
-| `LinePanel.swift` | The transparent strip along the top of the screen |
-| `LineView.swift` | The line and where each photo hangs |
-| `PeggedView.swift` | One photo: glass frame, clip, swing and breeze |
-| `GrabArea.swift` | Click, long press, drag and drop |
-| `ScreenshotWatcher.swift` | Notices new screenshots |
-| `ClipboardWatcher.swift` | Notices images copied to the clipboard |
-| `Inbox.swift` | Takes over screenshot settings and puts them back |
-| `Markup.swift` | Opens the system Markup editor and saves the result |
-| `Trim.swift` | Trims a screen recording and saves the result |
-| `FullScreen.swift` | Knows when to stay hidden |
-| `Line.swift` | What is hanging, and what you can do with it |
+This branch is based on upstream commit `7d60f230ba3212a7cc0e8ba4b7dd60f44fdadd60` (the 1.5-era source used for the prototype), not the latest upstream main. It is an implementation for discussion, not a ready-to-merge upstream patch.
 
-Every image here, the icon included, is drawn in code by
-`scripts/make-icon.swift` and `scripts/make-readme-art.swift`.
-`scripts/make-dmg.sh` builds the disk image for releases.
+- Download scans run every 1.5 seconds. Common temporary extensions and aria2 control files are skipped; size and modification metadata must remain stable for three seconds. A long pause while writing a final filename can still look like completion.
+- The watcher does not backfill arrivals that happened while the app was closed. It watches the default Downloads location, not arbitrary custom browser destinations or chat databases.
+- URL-only drags and chat text are outside scope. File promises are supported in code, but source-app compatibility needs further testing.
+- Release builds, signing verification and six local checks passed on a real Mac. The checks cover historical-file exclusion, temporary/final renames, growing/deleted files, folders and aria2 sidecars, copying imports, and generic-file display/removal semantics.
+- New-file pickup in Downloads was observed in the running application. A user confirmed successful direct file dragging from a messaging application. Telegram, WhatsApp and a device-to-device AirDrop transfer have not been separately verified.
+- New feature text is provided in English and Simplified Chinese; additional translation review is needed before any upstream contribution.
 
-Translations live in `Sources/Tendedero/Resources`, one `.lproj` folder per
-language. `swift scripts/check-strings.swift` checks that none is missing.
+If these workflows fit upstream's scope, the relevant feature changes can be rebased and proposed separately, without the fork's branding or personal build choices.
 
-</details>
+## License and attribution
 
-<br>
-
----
-
-<sub>
-1. On first launch, Tendedero offers to handle your screenshots. If you accept, it turns off the floating thumbnail and saves new screenshots to its own folder, two settings also found under Options in Cmd+Shift+5. Your previous settings are saved and restored when Tendedero quits or the option is turned off from the menu bar. Tendedero hides automatically while an app is in full screen.
-</sub>
-
-<br>
-<br>
-
-<p align="center">
-  <img src="docs/images/icon.png" width="64" height="64" alt="">
-  <br>
-  <sub>The code is MIT licensed. The Tendedero name and icon are not, so forks need their own. See <a href="LICENSE">LICENSE</a>.</sub>
-  <br>
-  <sub>Designed and built by <a href="https://alejandrobujan.com">Alejandro Buján</a>.</sub>
-</p>
+Code is MIT licensed; see [LICENSE](LICENSE). The upstream name and icon are excluded from that license. LineShelf uses a separate name and a new icon. This implementation was developed with AI assistance and checked locally; the limitations above are part of its current test status.

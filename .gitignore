@@ -3,3 +3,19 @@ build/
 .DS_Store
 *.xcodeproj
 .swiftpm/
+
+# Local-only data and build/distribution artifacts
+work/
+outputs/
+*.app/
+*.dmg
+*.zip
+*.log
+.env
+.env.*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.db
+*.db-*
+*.local.plist

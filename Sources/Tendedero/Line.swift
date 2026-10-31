@@ -17,6 +17,7 @@ struct Pegged: Identifiable, Equatable {
     var flying = false
     /// A screen recording rather than a screenshot.
     var isRecording: Bool { Tendedero.isRecording(url) }
+    var isImage: Bool { isImageFile(url) }
 
     static func == (a: Pegged, b: Pegged) -> Bool {
         a.id == b.id && a.falling == b.falling && a.flying == b.flying && a.thumb === b.thumb
@@ -34,6 +35,7 @@ final class Line: ObservableObject {
     @Published var pressedID: UUID?
     /// Whether the line has slid down into view.
     @Published var revealed = false
+    @Published var acceptingDrop = false
 
     /// Card frames in window coordinates, reported by the views. The panel
     /// uses them to only catch clicks over photos and let the rest through.
@@ -157,7 +159,7 @@ final class Line: ObservableObject {
         guard let item = items.first(where: { $0.id == id }) else { return }
         let entry = NSPasteboardItem()
         // A recording is copied as the file, which apps paste as the video.
-        if !item.isRecording, let png = pngData(item.url) { entry.setData(png, forType: .png) }
+        if item.isImage, let png = pngData(item.url) { entry.setData(png, forType: .png) }
         entry.setString(item.url.absoluteString, forType: .fileURL)
         let pb = NSPasteboard.general
         pb.clearContents()
@@ -202,7 +204,7 @@ final class Line: ObservableObject {
     /// Files anywhere else, like the Desktop, stay where they are.
     func isInInbox(_ id: UUID) -> Bool {
         guard let item = items.first(where: { $0.id == id }) else { return false }
-        return item.url.standardizedFileURL.path.hasPrefix(Inbox.folder.standardizedFileURL.path + "/")
+        return FileShelf.owns(item.url) || item.url.standardizedFileURL.path.hasPrefix(Inbox.folder.standardizedFileURL.path + "/")
     }
 
     /// The corner cross and "Take down" both end up here.
@@ -230,7 +232,10 @@ final class Line: ObservableObject {
     }
 
     private func letGo(_ id: UUID) {
-        if isInInbox(id), trash(id, quietly: true) { return }
+        // Capacity eviction only removes manually imported files from the line;
+        // never silently trash the only retained copy of a chat attachment.
+        if let item = items.first(where: { $0.id == id }), !FileShelf.owns(item.url),
+           isInInbox(id), trash(id, quietly: true) { return }
         drop(id, quietly: true)
     }
 
@@ -266,8 +271,10 @@ final class Line: ObservableObject {
         guard let item = items.first(where: { $0.id == id }) else { return }
         if item.isRecording {
             Trim.shared.edit(item.url, size: item.thumb.size)
-        } else {
+        } else if item.isImage {
             Markup.shared.edit(item.url)
+        } else {
+            quickLook(id)
         }
     }
 
@@ -352,8 +359,11 @@ func isRecording(_ url: URL) -> Bool {
 /// The default size covers a card at twice its size in points, as on a
 /// Retina screen, and no more: every photo on the line keeps one in memory.
 func makeThumbnail(_ url: URL, maxPixels: Int = Int(320 * Layout.size.scale)) -> NSImage? {
-    if isRecording(url) { return firstFrame(url, maxPixels: maxPixels) }
-    guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
+    guard FileManager.default.fileExists(atPath: url.path) else { return nil }
+    let icon = { NSWorkspace.shared.icon(forFile: url.path) }
+    if isRecording(url) { return firstFrame(url, maxPixels: maxPixels) ?? icon() }
+    if !isImageFile(url) { return icon() }
+    guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return icon() }
     let options: [CFString: Any] = [
         kCGImageSourceCreateThumbnailFromImageAlways: true,
         kCGImageSourceCreateThumbnailWithTransform: true,
@@ -370,4 +380,8 @@ private func firstFrame(_ url: URL, maxPixels: Int) -> NSImage? {
     generator.maximumSize = CGSize(width: maxPixels, height: maxPixels)
     guard let cg = try? generator.copyCGImage(at: .zero, actualTime: nil) else { return nil }
     return NSImage(cgImage: cg, size: NSSize(width: cg.width, height: cg.height))
+}
+
+func isImageFile(_ url: URL) -> Bool {
+    ["png", "jpg", "jpeg", "heic", "heif", "tif", "tiff", "gif", "webp", "bmp"].contains(url.pathExtension.lowercased())
 }

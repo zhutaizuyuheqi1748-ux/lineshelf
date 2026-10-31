@@ -3,8 +3,8 @@
    swift scripts/check-strings.swift to check. */
 
 /* AppDelegate */
-"Let Tendedero handle your screenshots?" = "Ekran şəkillərinizi Tendedero idarə etsin?";
-"Screenshots will hang on the line the instant you take them, without the floating thumbnail, and will not pile up on your Desktop. Drag one to a folder to keep it, or discard it with the cross. You can turn this off from the menu bar, and your settings come back when Tendedero quits." = "Ekran şəkilləri üzən miniatür olmadan, çəkdiyiniz an ipdən asılacaq və İş masanızda yığılıb qalmayacaq. Saxlamaq istədiyinizi qovluğa sürükləyin, istəmədiyinizi çarpazla atın. Bunu menyu panelindən söndürə bilərsiniz, Tendedero bağlananda isə ayarlarınız əvvəlki halına qayıdır.";
+"Let 晾架 handle your screenshots?" = "Ekran şəkillərinizi 晾架 idarə etsin?";
+"Screenshots will hang on the line the instant you take them, without the floating thumbnail, and will not pile up on your Desktop. Drag one to a folder to keep it, or discard it with the cross. You can turn this off from the menu bar, and your settings come back when 晾架 quits." = "Ekran şəkilləri üzən miniatür olmadan, çəkdiyiniz an ipdən asılacaq və İş masanızda yığılıb qalmayacaq. Saxlamaq istədiyinizi qovluğa sürükləyin, istəmədiyinizi çarpazla atın. Bunu menyu panelindən söndürə bilərsiniz, 晾架 bağlananda isə ayarlarınız əvvəlki halına qayıdır.";
 "Turn on" = "Aktiv et";
 "Not now" = "İndi yox";
 "Hide line" = "İpi gizlət";
@@ -16,9 +16,9 @@
 "Sounds" = "Səslər";
 "Open at login" = "Sistemə girişdə aç";
 "Check for Updates…" = "Yeniləmələri yoxla…";
-"Quit Tendedero" = "Tendedero-dan çıx";
+"Quit 晾架" = "晾架-dan çıx";
 "Could not change the login setting" = "Giriş ayarını dəyişmək alınmadı";
-"Move Tendedero to the Applications folder and try again." = "Tendedero-nu Applications (Proqramlar) qovluğuna köçürün və yenidən cəhd edin.";
+"Move 晾架 to the Applications folder and try again." = "晾架-nu Applications (Proqramlar) qovluğuna köçürün və yenidən cəhd edin.";
 "Keep on line" = "İpdə saxla";
 "As many as fit" = "Sığdığı qədər";
 "%d photos" = "%d şəkil";
@@ -44,7 +44,7 @@
 "Over full screen apps" = "Tam ekran proqramların üzərində";
 "Hang copied images" = "Kopyalanmış şəkilləri as";
 "Images you copy hang on the line too" = "Kopyaladığınız şəkillər də ipdən asılır";
-"Tendedero, hanging copied images" = "Tendedero, kopyalanmış şəkilləri asır";
+"晾架, hanging copied images" = "晾架, kopyalanmış şəkilləri asır";
 
 /* GrabArea */
 "Copy" = "Kopyala";

@@ -76,6 +76,20 @@ struct PeggedView: View {
                         .allowsHitTesting(false)
                 }
             }
+            .overlay(alignment: .bottom) {
+                if !item.isImage && !item.isRecording {
+                    Text(item.url.lastPathComponent)
+                        .font(.system(size: 10, weight: .medium))
+                        .lineLimit(2)
+                        .truncationMode(.middle)
+                        .multilineTextAlignment(.center)
+                        .padding(4)
+                        .frame(maxWidth: .infinity)
+                        .background(.regularMaterial)
+                        .allowsHitTesting(false)
+                }
+            }
+            .help(item.url.lastPathComponent)
             .padding(Frame.inset)
             .glassFrame(cornerRadius: Frame.radius)
             .shadow(color: .black.opacity(hovering ? 0.26 : 0.18), radius: hovering ? 14 : 10, y: hovering ? 8 : 5)

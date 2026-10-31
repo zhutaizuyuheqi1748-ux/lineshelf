@@ -11,6 +11,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var panel: LinePanel!
     private var statusItem: NSStatusItem!
     private var watcher: ScreenshotWatcher!
+    private var downloadWatcher: DownloadWatcher?
+    private var downloadError: String?
+    private let importQueue = DispatchQueue(label: "local.lineshelf.imports", qos: .userInitiated)
     /// In inbox mode, a second watcher on the Desktop. If a macOS version
     /// ignores the screenshot settings (macOS 27 renamed one), captures keep
     /// landing on the Desktop, and they still hang on the line.
@@ -40,6 +43,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var menuBarSuppressed = false
     private var clickMonitors: [Any] = []
     private var awaySince: Date?
+    private var lastDragChangeCount = NSPasteboard(name: .drag).changeCount
+    // Accessibility-driven drags may not set NSEvent.pressedMouseButtons.
+    // A fresh file drag pasteboard grants a short receiving window instead.
+    private var incomingDragUntil = Date.distantPast
     /// Whether the line should be up, if nothing prevents it. A full screen
     /// app on that screen does: the line waits until you leave full screen.
     private var wanted = false
@@ -64,8 +71,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let host = NSHostingView(rootView: LineView(line: line))
-        host.sizingOptions = []
+        let host = FileDropView(rootView: LineView(line: line))
+        host.onFiles = { [weak self] urls in self?.receiveFiles(urls) }
+        host.onFailure = { [weak self] error in self?.showImportError(error) }
+        host.onHover = { [weak self] active in self?.line.acceptingDrop = active }
         panel = LinePanel(content: host)
         panel.placeOnScreen()
         updateCapacity()
@@ -73,12 +82,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if Inbox.isEnabled { Inbox.apply() }
         restoreSettingsOnTermination()
         startWatcher()
+        startDownloadWatcher()
         clipboardWatcher = ClipboardWatcher { [weak self] url in self?.hangCapture(url) }
         if ClipboardWatcher.isEnabled { clipboardWatcher.start() }
 
         registerShortcut()
 
         setUpStatusItem()
+        startMouseTracking()
         watchMenuBarClicks()
 
         Markup.shared.onSaved = { [weak self] url in self?.line.reloadThumbnail(for: url) }
@@ -138,8 +149,59 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        keepOpen = true
+        wanted = true
+        panel.placeOnScreen()
+        updateCapacity()
+        refresh()
+        reveal(pinned: true)
+        return true
+    }
+
     func applicationWillTerminate(_ notification: Notification) {
         if Inbox.isEnabled { Inbox.restore() }
+    }
+
+    private func startDownloadWatcher() {
+        downloadWatcher?.stop()
+        downloadWatcher = nil
+        downloadError = nil
+        guard DownloadWatcher.isEnabled else { return }
+        let downloads = DownloadWatcher(onNew: { [weak self] url in
+            self?.hangFile(url)
+        }, onChange: { [weak self] in self?.line.prune() }, onError: { [weak self] message in
+            self?.downloadError = message
+        })
+        downloadWatcher = downloads
+        downloads.start()
+    }
+
+    private func hangFile(_ url: URL) {
+        comeDown(on: nil)
+        if line.hang(url) == nil { line.reloadThumbnail(for: url); itemsChanged() }
+    }
+
+    private func receiveFiles(_ urls: [URL]) {
+        incomingDragUntil = .distantPast
+        for url in urls {
+            importQueue.async { [weak self] in
+                do {
+                    let saved = try FileShelf.receive(url)
+                    DispatchQueue.main.async { self?.hangFile(saved) }
+                } catch {
+                    DispatchQueue.main.async { self?.showImportError(error) }
+                }
+            }
+        }
+    }
+
+    private func showImportError(_ error: Error) {
+        let alert = NSAlert()
+        alert.messageText = L("Could not receive file")
+        alert.informativeText = error.localizedDescription
+        NSApp.activate(ignoringOtherApps: true)
+        alert.runModal()
     }
 
     // MARK: Inbox mode
@@ -219,7 +281,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func offerInbox() {
         Inbox.wasOffered = true
         let alert = NSAlert()
-        alert.messageText = L("Let Tendedero handle your screenshots?")
+        alert.messageText = L("Let 晾架 handle your screenshots?")
         alert.informativeText = L(
             "Screenshots will hang on the line the instant you take them, without the floating thumbnail, and will not pile up on your Desktop. Drag one to a folder to keep it, or discard it with the cross. You can turn this off from the menu bar, and your settings come back when Tendedero quits.")
         alert.addButton(withTitle: L("Turn on"))
@@ -353,7 +415,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         // The cursor is watched while there is a line, even tucked away,
         // to notice it pushing against the top edge.
-        if wanted { startMouseTracking() } else { stopMouseTracking() }
+        startMouseTracking()
     }
 
     private func present() {
@@ -485,6 +547,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let inMenuBar = screenUnderPointer.map { NSMouseInRect(mouse, Self.menuBarBand(of: $0), false) } ?? false
         if !inMenuBar { menuBarSuppressed = false }
 
+        // External file drags can reveal even an empty line. Reading only
+        // drag pasteboard types does not inspect the general clipboard.
+        let dragBoard = NSPasteboard(name: .drag)
+        if dragBoard.changeCount != lastDragChangeCount {
+            lastDragChangeCount = dragBoard.changeCount
+            if !GrabView.isDragging && FileDropView.accepts(dragBoard) {
+                incomingDragUntil = now.addingTimeInterval(2)
+            }
+        }
+        let externalDrag = (NSEvent.pressedMouseButtons & 1 != 0 || now < incomingDragUntil) && !GrabView.isDragging
+            && FileDropView.accepts(NSPasteboard(name: .drag))
+        let nearTop = screenUnderPointer.map { mouse.y >= $0.visibleFrame.maxY - 64 } ?? false
+        if externalDrag && nearTop, let screen = screenUnderPointer {
+            if !isRevealed {
+                panel.placeOnScreen(screen)
+                updateCapacity()
+                keepOpen = true
+                wanted = true
+                refresh()
+                reveal()
+                log.notice("Revealed line for incoming file drag")
+            }
+            panel.ignoresMouseEvents = false
+        }
+
         guard isRevealed else {
             // Resting in the menu bar brings the line down on that screen.
             // Pushing against the top edge is part of it, and it also works
@@ -517,7 +604,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let inside = NSMouseInRect(mouse, zone, false)
         if inside && pinned { pinned = false }
 
-        let busy = pinned || GrabView.isDragging || GrabView.isShowingMenu
+        let busy = pinned || GrabView.isDragging || GrabView.isShowingMenu || line.acceptingDrop
             || line.pressedID != nil || now < peekUntil
         if inside || busy {
             awaySince = nil
@@ -536,6 +623,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// whatever is underneath.
     private func updateMousePassThrough(_ mouse: NSPoint) {
         guard !GrabView.isDragging else { return }
+        // Keep the destination alive through mouse-up. AppKit, not a mouse
+        // poll, ends the receiving session via draggingExited/Ended/perform.
+        if line.acceptingDrop || ((NSEvent.pressedMouseButtons & 1 != 0 || Date() < incomingDragUntil)
+            && FileDropView.accepts(NSPasteboard(name: .drag))) {
+            panel.ignoresMouseEvents = false
+            return
+        }
         let local = panel.convertPoint(fromScreen: mouse)
         let flipped = CGPoint(x: local.x, y: panel.frame.height - local.y)
         var overPhoto = line.hitRects.values.contains { $0.insetBy(dx: -4, dy: -4).contains(flipped) }
@@ -617,8 +711,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// glance that the clipboard is being watched.
     private func updateStatusIcon() {
         let on = ClipboardWatcher.isEnabled
-        let description = on ? L("Tendedero, hanging copied images") : "Tendedero"
-        let image = NSImage(systemSymbolName: on ? "tshirt.fill" : "tshirt", accessibilityDescription: description)
+        let description = on ? L("晾架, hanging copied images") : "晾架"
+        let image = NSImage(systemSymbolName: on ? "tray.fill" : "tray", accessibilityDescription: description)
         image?.isTemplate = true
         statusItem.button?.image = image
         statusItem.button?.toolTip = description
@@ -655,6 +749,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         clipboard.state = ClipboardWatcher.isEnabled ? .on : .off
         clipboard.toolTip = L("Images you copy hang on the line too")
         menu.addItem(clipboard)
+
+        let downloads = ClosureMenuItem(L("Hang new downloads")) { [weak self] in
+            DownloadWatcher.isEnabled.toggle()
+            self?.startDownloadWatcher()
+        }
+        downloads.state = DownloadWatcher.isEnabled ? .on : .off
+        downloads.toolTip = L("New files in Downloads hang after they finish arriving")
+        menu.addItem(downloads)
+        menu.addItem(ClosureMenuItem(L("Open Downloads folder")) {
+            NSWorkspace.shared.open(DownloadWatcher.folder)
+        })
+        if let downloadError {
+            let error = NSMenuItem(title: L("Downloads unavailable — check folder access"), action: nil, keyEquivalent: "")
+            error.toolTip = downloadError
+            error.isEnabled = false
+            menu.addItem(error)
+        }
 
         let bringDown = NSMenuItem(title: L("Bring the line down"), action: nil, keyEquivalent: "")
         let options = NSMenu()
@@ -762,12 +873,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // The app never connects to anything, so it cannot tell when a new
         // version is out. The website can: it is opened with this version
         // and language, and says whether there is a newer one.
-        menu.addItem(ClosureMenuItem(L("Check for Updates…")) {
-            NSWorkspace.shared.open(AppDelegate.updatesURL)
+        menu.addItem(ClosureMenuItem("关于晾架") {
+            let alert = NSAlert()
+            alert.messageText = "晾架 1.0.0"
+            alert.informativeText = "基于 Alejandro Buján 的 Tendedero 开源项目修改，新增下载与拖入文件入口。本地独立版本，源代码采用 MIT 许可。"
+            alert.runModal()
         })
 
         menu.addItem(.separator())
-        menu.addItem(ClosureMenuItem(L("Quit Tendedero"), key: "q") {
+        menu.addItem(ClosureMenuItem(L("Quit 晾架"), key: "q") {
             NSApp.terminate(nil)
         })
     }

@@ -61,6 +61,14 @@ struct LineView: View {
             let width = geo.size.width
             ZStack(alignment: .topLeading) {
                 Rope(width: width)
+                if line.acceptingDrop {
+                    Label(L("Release to keep a copy on the line"), systemImage: "tray.and.arrow.down.fill")
+                        .padding(12)
+                        .background(.regularMaterial, in: Capsule())
+                        .frame(width: width)
+                        .offset(y: Layout.panelHeight - 65)
+                        .allowsHitTesting(false)
+                }
 
                 if line.items.isEmpty {
                     Hint()
@@ -95,7 +103,7 @@ struct LineView: View {
 
 private struct Hint: View {
     var body: some View {
-        Text(L("Take a screenshot and it will hang here"))
+        Text(L("Take a screenshot, download a file, or drop files here"))
             .font(.system(size: 12, weight: .medium, design: .rounded))
             .foregroundStyle(.secondary)
             .padding(.horizontal, 12)
